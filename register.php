@@ -16,8 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
     $email = $_POST['email'];
     $password = $_POST['password'];
+    $phone_number = $_POST['phone_number'];
+    $date_of_birth = $_POST['date_of_birth'];
+    $gender = $_POST['gender'];
 
-    if (empty($username) || empty($email) || empty($password)) {
+    if (empty($username) || empty($email) || empty($password) || empty($phone_number) || empty($date_of_birth) || empty($gender)) {
         $message = "<p>Please fill in all fields.</p>";
     } else {
         $sql_check = "SELECT * FROM users WHERE email = ? OR username = ?";
@@ -33,9 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+            $sql = "INSERT INTO users (username, email, password, phone_number, date_of_birth, gender) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $username, $email, $hashed_password);
+            $stmt->bind_param("ssssss", $username, $email, $hashed_password, $phone_number, $date_of_birth, $gender);
 
             if ($stmt->execute()) {
                 $message = "<p>Registration successful! <a href='login.php'>Go to Login</a></p>";
@@ -69,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         .container {
             width: 100%;
-            max-width: 360px;
+            max-width: 400px;
             padding: 20px;
             border-radius: 4px;
             border: 1px solid #ddd;
@@ -90,7 +93,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color: #555;
             text-align: left;
         }
-        input[type="text"], input[type="email"], input[type="password"] {
+        input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="date"] {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        select {
             padding: 10px;
             font-size: 14px;
             border: 1px solid #ddd;
@@ -140,6 +152,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required>
+
+            <label for="phone_number">Phone Number</label>
+            <input type="tel" id="phone_number" name="phone_number" required>
+
+            <label for="date_of_birth">Date of Birth</label>
+            <input type="date" id="date_of_birth" name="date_of_birth" required>
+
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" required>
+                <option value="">Select...</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
 
             <input type="submit" value="Register">
             <a href="login.php">Already have an account? Login here</a>

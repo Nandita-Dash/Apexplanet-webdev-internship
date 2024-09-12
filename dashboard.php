@@ -135,10 +135,10 @@ $conn->close();
             background-color: #222;
         }
         .delete {
-            background-color: #333;
+            background-color: #d9534f;
         }
         .delete:hover {
-            background-color: #222;
+            background-color: #c9302c;
         }
     </style>
 </head>

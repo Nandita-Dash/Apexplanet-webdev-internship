@@ -24,8 +24,8 @@ if (isset($_GET['username'])) {
     $username_to_edit = $_GET['username'];
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $email = $_POST['email'];
-        $phone_number = $_POST['phone_number'];
+        $email = trim($_POST['email']);
+        $phone_number = trim($_POST['phone_number']);
         $date_of_birth = $_POST['date_of_birth'];
         $gender = $_POST['gender'];
 
@@ -148,14 +148,39 @@ $conn->close();
             background-color: #ddd;
         }
     </style>
+    <script>
+        function validateForm(event) {
+            var email = document.getElementById('email').value.trim();
+            var phone_number = document.getElementById('phone_number').value.trim();
+            var date_of_birth = document.getElementById('date_of_birth').value.trim();
+            var gender = document.getElementById('gender').value.trim();
+            var message = '';
+
+            if (email === '' || phone_number === '' || date_of_birth === '' || gender === '') {
+                message = 'Please fill in all fields.';
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                message = 'Invalid email format.';
+            } else if (!/^\d{10}$/.test(phone_number)) {
+                message = 'Phone number must be 10 digits.';
+            }
+
+            if (message) {
+                document.getElementById('form-message').textContent = message;
+                event.preventDefault();
+                return false;
+            }
+
+            return true;
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h2>Update User Profile</h2>
-        <div class="message">
+        <div id="form-message" class="message">
             <?php echo $message; ?>
         </div>
-        <form action="update_user.php?username=<?php echo htmlspecialchars($username_to_edit); ?>" method="post">
+        <form action="update_user.php?username=<?php echo htmlspecialchars($username_to_edit); ?>" method="post" onsubmit="return validateForm(event)">
             <label for="email">Email</label>
             <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
 

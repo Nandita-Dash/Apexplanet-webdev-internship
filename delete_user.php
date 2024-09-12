@@ -23,15 +23,12 @@ $loggedInUsername = $_SESSION['username'];
 if (isset($_GET['username'])) {
     $username_to_delete = $_GET['username'];
 
-    // Check if the user is trying to delete their own account
     if ($username_to_delete === $loggedInUsername) {
-        // Handle self-deletion
         $sql_delete = "DELETE FROM users WHERE username=?";
         $stmt_delete = $conn->prepare($sql_delete);
         $stmt_delete->bind_param("s", $username_to_delete);
 
         if ($stmt_delete->execute()) {
-            // Destroy the session and redirect to login.php
             session_destroy();
             header("Location: login.php");
             exit();
@@ -41,7 +38,6 @@ if (isset($_GET['username'])) {
 
         $stmt_delete->close();
     } else {
-        // Allow deleting other users' accounts
         $sql_delete = "DELETE FROM users WHERE username=?";
         $stmt_delete = $conn->prepare($sql_delete);
         $stmt_delete->bind_param("s", $username_to_delete);

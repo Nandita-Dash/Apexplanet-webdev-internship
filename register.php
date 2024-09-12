@@ -13,15 +13,22 @@ if ($conn->connect_error) {
 $message = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $phone_number = $_POST['phone_number'];
-    $date_of_birth = $_POST['date_of_birth'];
-    $gender = $_POST['gender'];
+    $username = trim($_POST['username']);
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
+    $phone_number = trim($_POST['phone_number']);
+    $date_of_birth = trim($_POST['date_of_birth']);
+    $gender = trim($_POST['gender']);
 
+    // Validation
     if (empty($username) || empty($email) || empty($password) || empty($phone_number) || empty($date_of_birth) || empty($gender)) {
         $message = "<p>Please fill in all fields.</p>";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = "<p>Invalid email format.</p>";
+    } elseif (!preg_match("/^[0-9]{10}$/", $phone_number)) {
+        $message = "<p>Invalid phone number. It should be a 10-digit number.</p>";
+    } elseif (strlen($password) < 6) {
+        $message = "<p>Password must be at least 6 characters long.</p>";
     } else {
         $sql_check = "SELECT * FROM users WHERE email = ? OR username = ?";
         $stmt_check = $conn->prepare($sql_check);
@@ -136,14 +143,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             text-align: center;
         }
     </style>
+    <script>
+        function validateForm(event) {
+            var username = document.getElementById('username').value.trim();
+            var email = document.getElementById('email').value.trim();
+            var password = document.getElementById('password').value.trim();
+            var phone_number = document.getElementById('phone_number').value.trim();
+            var date_of_birth = document.getElementById('date_of_birth').value.trim();
+            var gender = document.getElementById('gender').value.trim();
+            var message = '';
+
+            if (username === '' || email === '' || password === '' || phone_number === '' || date_of_birth === '' || gender === '') {
+                message = 'Please fill in all fields.';
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                message = 'Invalid email format.';
+            } else if (!/^[0-9]{10}$/.test(phone_number)) {
+                message = 'Phone number must be a 10-digit number.';
+            } else if (password.length < 6) {
+                message = 'Password must be at least 6 characters long.';
+            }
+
+            if (message) {
+                document.getElementById('form-message').textContent = message;
+                event.preventDefault();
+                return false;
+            }
+
+            return true;
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h2>Register</h2>
-        <div class="message">
+        <div id="form-message" class="message">
             <?php echo $message; ?>
         </div>
-        <form action="register.php" method="post">
+        <form action="register.php" method="post" onsubmit="return validateForm(event)">
             <label for="username">Username</label>
             <input type="text" id="username" name="username" required>
 

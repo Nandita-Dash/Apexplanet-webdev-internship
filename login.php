@@ -1,55 +1,46 @@
 <?php
-// Database connection parameters
 $servername = "localhost";
 $username = "root";
 $password = "";
 $dbname = "user_management"; 
 
-// Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
 
-// Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
 
-    // Validate input
     if (empty($email) || empty($password)) {
-        echo "<p>Please fill in all fields.</p>";
-        echo '<a href="login.php">Go Back to Login</a>';
-        $conn->close();
-        exit();
-    }
-
-    // Check if the user exists
-    $sql = "SELECT * FROM users WHERE email=?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-
-        // Verify password
-        if (password_verify($password, $user['password'])) {
-            session_start();
-            $_SESSION['username'] = $user['username'];
-            header("Location: dashboard.php"); // Redirect to dashboard
-            exit();
-        } else {
-            echo "<p>Invalid email or password.</p>";
-        }
+        $message = "<p>Please fill in all fields.</p>";
     } else {
-        echo "<p>No user found with this email.</p>";
+        $sql = "SELECT * FROM users WHERE email=?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+
+            if (password_verify($password, $user['password'])) {
+                session_start();
+                $_SESSION['username'] = $user['username'];
+                header("Location: dashboard.php");
+                exit();
+            } else {
+                $message = "<p>Invalid email or password.</p>";
+            }
+        } else {
+            $message = "<p>No user found with this email.</p>";
+        }
+
+        $stmt->close();
     }
 
-    $stmt->close();
     $conn->close();
 }
 ?>
@@ -68,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #fff; /* White background for the entire page */
+            background-color: #fff;
         }
         .container {
             width: 100%;
@@ -76,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             padding: 20px;
             border-radius: 4px;
             border: 1px solid #ddd;
-            background-color: #fff; /* White background for the container */
+            background-color: #fff;
             text-align: center;
         }
         h2 {
@@ -104,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         input[type="submit"] {
             padding: 10px;
-            background-color: #000; /* Black background for the button */
+            background-color: #000;
             color: white;
             border: none;
             border-radius: 4px;
@@ -113,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             margin-top: 10px;
         }
         input[type="submit"]:hover {
-            background-color: #333; /* Darker shade of black for hover effect */
+            background-color: #333;
         }
         a {
             margin-top: 10px;
@@ -121,12 +112,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color: #007bff;
             text-decoration: none;
         }
+        .message {
+            margin-bottom: 20px;
+            color: red;
+            text-align: center;
+        }
     </style>
+    <script>
+        function validateForm(event) {
+            var email = document.getElementById('email').value.trim();
+            var password = document.getElementById('password').value.trim();
+            var message = '';
+
+            if (email === '' || password === '') {
+                message = 'Please fill in all fields.';
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                message = 'Invalid email format.';
+            } else if (password.length < 6) {
+                message = 'Password must be at least 6 characters long.';
+            }
+
+            if (message) {
+                document.getElementById('form-message').textContent = message;
+                event.preventDefault();
+                return false;
+            }
+
+            return true;
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h2>Login</h2>
-        <form action="login.php" method="post">
+        <div id="form-message" class="message">
+            <?php echo $message ?? ''; ?>
+        </div>
+        <form action="login.php" method="post" onsubmit="return validateForm(event)">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
 

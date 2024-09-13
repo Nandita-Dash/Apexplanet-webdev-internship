@@ -60,30 +60,32 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delete User</title>
+    <title>Operation Success</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            margin: 0;
         }
         .container {
             width: 90%;
             max-width: 600px;
             padding: 30px;
-            background-color: #ffffff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
         h2 {
             margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 28px;
             color: #333;
+            font-weight: 600;
         }
         .message {
             margin-bottom: 20px;
@@ -91,17 +93,16 @@ $conn->close();
             text-align: center;
         }
         .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #333;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
             color: white;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 6px;
             text-align: center;
             font-size: 16px;
         }
         .btn:hover {
-            background-color: #555;
+            background: linear-gradient(135deg, #ff7eb3, #ff758c);
         }
     </style>
 </head>
@@ -111,7 +112,7 @@ $conn->close();
         <div class="message">
             <?php echo $message; ?>
         </div>
-        <a href="dashboard.php" class="btn">Back to Dashboard</a>
+        <a href="manage_users.php" class="btn">Back to Manage Users</a>
     </div>
 </body>
 </html>

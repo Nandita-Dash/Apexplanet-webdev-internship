@@ -31,9 +31,6 @@ if ($result_user->num_rows > 0) {
     echo "Error fetching user information.";
 }
 
-$sql_all_users = "SELECT username, email FROM users";
-$result_all_users = $conn->query($sql_all_users);
-
 $stmt_user->close();
 $conn->close();
 ?>
@@ -45,100 +42,76 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            margin: 0;
         }
         .container {
-            width: 80%;
-            max-width: 700px;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px; /* Increased width */
+            padding: 60px; /* Increased padding */
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
         }
         header {
-            text-align: center;
-            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px; /* Increased margin for spacing */
         }
         h1 {
+            font-size: 36px; /* Increased font size */
             margin: 0;
-            font-size: 24px;
             color: #333;
+            font-weight: 600;
+        }
+        .btn-manage-users, .btn-logout {
+            padding: 10px 20px; /* Increased padding */
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px; /* Increased font size */
+            text-align: center;
+        }
+        .btn-manage-users {
+            margin-right: 20px;
+        }
+        .btn-manage-users:hover {
+            background: linear-gradient(135deg, #ff7eb3, #ff758c);
+        }
+        .btn-logout {
+            margin-left: auto;
+        }
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #ff7eb3, #ff758c);
         }
         .profile-info {
-            margin-bottom: 20px;
-            padding: 15px;
+            margin-bottom: 30px; /* Increased margin */
+            padding: 25px; /* Increased padding */
             border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #fafafa;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: left;
         }
         .profile-info h2 {
             margin: 0;
-            font-size: 18px;
+            font-size: 28px; /* Increased font size */
             color: #333;
         }
         .profile-info p {
-            margin: 8px 0;
+            margin: 12px 0; /* Increased margin */
             color: #666;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
-        th {
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 15px;
-            background-color: #333;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            text-align: center;
-            font-size: 14px;
-        }
-        .btn:hover {
-            background-color: #555;
-        }
-        .action-btns a {
-            display: inline-block;
-            padding: 5px 8px;
-            margin: 0 4px;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 3px;
-            font-size: 12px;
-            text-align: center;
-        }
-        .edit {
-            background-color: #333;
-        }
-        .edit:hover {
-            background-color: #222;
-        }
-        .delete {
-            background-color: #d9534f;
-        }
-        .delete:hover {
-            background-color: #c9302c;
         }
     </style>
 </head>
@@ -146,6 +119,10 @@ $conn->close();
     <div class="container">
         <header>
             <h1>Dashboard</h1>
+            <div>
+                <a href="manage_users.php" class="btn-manage-users">Manage Users</a>
+                <a href="logout.php" class="btn-logout">Logout</a>
+            </div>
         </header>
         <div class="profile-info">
             <h2>Welcome, <?php echo htmlspecialchars($user['username']); ?>!</h2>
@@ -154,31 +131,6 @@ $conn->close();
             <p>Date of Birth: <?php echo htmlspecialchars($user['date_of_birth']); ?></p>
             <p>Gender: <?php echo htmlspecialchars($user['gender']); ?></p>
         </div>
-        <h2>All Users</h2>
-        <table>
-            <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Actions</th>
-            </tr>
-            <?php
-            if ($result_all_users->num_rows > 0) {
-                while ($row = $result_all_users->fetch_assoc()) {
-                    echo "<tr>";
-                    echo "<td>" . htmlspecialchars($row['username']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['email']) . "</td>";
-                    echo "<td class='action-btns'>";
-                    echo "<a href='update_user.php?username=" . urlencode($row['username']) . "' class='edit'>Edit</a>";
-                    echo "<a href='delete_user.php?username=" . urlencode($row['username']) . "' class='delete'>Delete</a>";
-                    echo "</td>";
-                    echo "</tr>";
-                }
-            } else {
-                echo "<tr><td colspan='3'>No users found.</td></tr>";
-            }
-            ?>
-        </table>
-        <a href="logout.php" class="btn">Logout</a>
     </div>
 </body>
 </html>

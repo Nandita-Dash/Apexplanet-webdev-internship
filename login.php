@@ -52,69 +52,77 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #fff;
         }
         .container {
             width: 100%;
-            max-width: 360px;
-            padding: 20px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            background-color: #fff;
+            max-width: 400px;
+            padding: 40px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
         h2 {
-            margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 600;
         }
         form {
-            display: flex;
-            flex-direction: column;
-        }
-        label {
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #555;
-            text-align: left;
+            display: grid;
+            gap: 20px;
         }
         input[type="email"], input[type="password"] {
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            width: 100%;
-            box-sizing: border-box;
+            padding: 14px;
+            font-size: 16px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+            transition: border-color 0.3s ease;
+        }
+        input[type="email"]::placeholder, input[type="password"]::placeholder {
+            color: #aaa;
+        }
+        input[type="email"]:focus, input[type="password"]:focus {
+            border-color: #ff9a9e;
+            outline: none;
         }
         input[type="submit"] {
-            padding: 10px;
-            background-color: #000;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.3s ease;
         }
         input[type="submit"]:hover {
-            background-color: #333;
+            background: linear-gradient(135deg, #ff7eb3, #ff758c);
         }
         a {
-            margin-top: 10px;
-            display: block;
-            color: #007bff;
+            margin-top: 20px;
+            color: #ff7eb3;
+            font-size: 16px;
             text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
         }
         .message {
             margin-bottom: 20px;
             color: red;
+            font-size: 14px;
             text-align: center;
         }
     </style>
@@ -149,12 +157,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <?php echo $message ?? ''; ?>
         </div>
         <form action="login.php" method="post" onsubmit="return validateForm(event)">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-
+            <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
             <input type="submit" value="Login">
             <a href="register.php">Don't have an account? Register here</a>
         </form>

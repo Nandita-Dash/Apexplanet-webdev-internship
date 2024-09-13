@@ -17,7 +17,9 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$message = "";
+$message = "";  // Initialize message
+$user = null;   // Initialize user
+
 $loggedInUsername = $_SESSION['username'];
 
 if (isset($_GET['username'])) {
@@ -55,13 +57,12 @@ if (isset($_GET['username'])) {
     if ($result_user->num_rows > 0) {
         $user = $result_user->fetch_assoc();
     } else {
-        echo "Error fetching user information.";
+        $message = "<p>Error fetching user information.</p>";
     }
 
     $stmt_user->close();
 } else {
-    echo "No user specified for update.";
-    exit();
+    $message = "<p>No user specified for update.</p>";
 }
 
 $conn->close();
@@ -74,78 +75,87 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update User</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            margin: 0;
         }
         .container {
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             padding: 30px;
-            background-color: #ffffff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative; /* Allows positioning of the button within the container */
+        }
+        .container .btn-back {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 6px 12px; /* Reduced padding */
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px; /* Reduced font size */
+        }
+        .container .btn-back:hover {
+            background: linear-gradient(135deg, #ff7eb3, #ff758c);
         }
         h2 {
             margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 28px;
             color: #333;
+            font-weight: 600;
         }
         form {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+            margin-top: 20px;
+            text-align: left; /* Aligns labels to the left */
         }
         label {
             margin-bottom: 5px;
-            font-size: 14px;
+            font-size: 16px;
             color: #555;
+            text-align: left;
+            display: block; /* Ensures the label occupies the full width */
         }
         input[type="text"], input[type="email"], input[type="tel"], input[type="date"], select {
-            padding: 10px;
-            font-size: 14px;
+            padding: 12px;
+            font-size: 16px;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 15px;
+            border-radius: 6px;
             width: 100%;
             box-sizing: border-box;
         }
         input[type="submit"] {
-            padding: 10px;
-            background-color: #333;
+            grid-column: span 2; /* Makes the submit button span across both columns */
+            padding: 12px;
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            width: 100%;
+            font-size: 16px;
         }
         input[type="submit"]:hover {
-            background-color: #555;
+            background: linear-gradient(135deg, #ff7eb3, #ff758c);
         }
         .message {
             margin-bottom: 20px;
             color: red;
             text-align: center;
-        }
-        .btn-back {
-            display: inline-block;
-            padding: 5px 10px;
-            background-color: #eee;
-            color: #333;
-            text-decoration: none;
-            border-radius: 4px;
-            text-align: center;
-            font-size: 14px;
-            margin-top: 20px;
-            width: auto;
-        }
-        .btn-back:hover {
-            background-color: #ddd;
         }
     </style>
     <script>
@@ -176,30 +186,38 @@ $conn->close();
 </head>
 <body>
     <div class="container">
+        <a href="manage_users.php" class="btn-back">Back to Manage Users</a>
         <h2>Update User Profile</h2>
         <div id="form-message" class="message">
             <?php echo $message; ?>
         </div>
         <form action="update_user.php?username=<?php echo htmlspecialchars($username_to_edit); ?>" method="post" onsubmit="return validateForm(event)">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="<?php echo isset($user['email']) ? htmlspecialchars($user['email']) : ''; ?>" required>
+            </div>
 
-            <label for="phone_number">Phone Number</label>
-            <input type="tel" id="phone_number" name="phone_number" value="<?php echo htmlspecialchars($user['phone_number']); ?>" required>
+            <div class="form-group">
+                <label for="phone_number">Phone Number</label>
+                <input type="tel" id="phone_number" name="phone_number" value="<?php echo isset($user['phone_number']) ? htmlspecialchars($user['phone_number']) : ''; ?>" required>
+            </div>
 
-            <label for="date_of_birth">Date of Birth</label>
-            <input type="date" id="date_of_birth" name="date_of_birth" value="<?php echo htmlspecialchars($user['date_of_birth']); ?>" required>
+            <div class="form-group">
+                <label for="date_of_birth">Date of Birth</label>
+                <input type="date" id="date_of_birth" name="date_of_birth" value="<?php echo isset($user['date_of_birth']) ? htmlspecialchars($user['date_of_birth']) : ''; ?>" required>
+            </div>
 
-            <label for="gender">Gender</label>
-            <select id="gender" name="gender" required>
-                <option value="Male" <?php echo ($user['gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
-                <option value="Female" <?php echo ($user['gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
-                <option value="Other" <?php echo ($user['gender'] == 'Other') ? 'selected' : ''; ?>>Other</option>
-            </select>
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender" name="gender" required>
+                    <option value="Male" <?php echo (isset($user['gender']) && $user['gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
+                    <option value="Female" <?php echo (isset($user['gender']) && $user['gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
+                    <option value="Other" <?php echo (isset($user['gender']) && $user['gender'] == 'Other') ? 'selected' : ''; ?>>Other</option>
+                </select>
+            </div>
 
             <input type="submit" value="Update">
         </form>
-        <a href="dashboard.php" class="btn-back">Return to Dashboard</a>
     </div>
 </body>
 </html>

@@ -10,6 +10,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Initialize $message to prevent warnings
 $message = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -20,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $date_of_birth = trim($_POST['date_of_birth']);
     $gender = trim($_POST['gender']);
 
-    // Validation
     if (empty($username) || empty($email) || empty($password) || empty($phone_number) || empty($date_of_birth) || empty($gender)) {
         $message = "<p>Please fill in all fields.</p>";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -68,78 +68,79 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #fff;
         }
         .container {
             width: 100%;
-            max-width: 400px;
-            padding: 20px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            background-color: #fff;
+            max-width: 600px;
+            padding: 40px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
         h2 {
-            margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 600;
         }
         form {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
-        label {
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #555;
-            text-align: left;
+        input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="date"], select {
+            padding: 14px;
+            font-size: 16px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+            transition: border-color 0.3s ease;
         }
-        input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="date"] {
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            width: 100%;
-            box-sizing: border-box;
+        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="tel"]:focus, input[type="date"]:focus, select:focus {
+            border-color: #ff9a9e;
+            outline: none;
         }
-        select {
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            width: 100%;
-            box-sizing: border-box;
+        .full-width {
+            grid-column: 1 / span 2;
         }
         input[type="submit"] {
-            padding: 10px;
-            background-color: #000;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.3s ease;
         }
         input[type="submit"]:hover {
-            background-color: #333;
+            background: linear-gradient(135deg, #ff7eb3, #ff758c);
         }
         a {
-            margin-top: 10px;
-            display: block;
-            color: #007bff;
+            margin-top: 20px;
+            color: #ff7eb3;
+            font-size: 16px;
             text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
         }
         .message {
             margin-bottom: 20px;
             color: red;
+            font-size: 14px;
+            grid-column: 1 / span 2;
             text-align: center;
         }
     </style>
@@ -180,31 +181,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <?php echo $message; ?>
         </div>
         <form action="register.php" method="post" onsubmit="return validateForm(event)">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" required>
-
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required>
-
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
-
-            <label for="phone_number">Phone Number</label>
-            <input type="tel" id="phone_number" name="phone_number" required>
-
-            <label for="date_of_birth">Date of Birth</label>
+            <input type="text" id="username" name="username" placeholder="Enter your username" required>
+            <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            <input type="tel" id="phone_number" name="phone_number" placeholder="Enter your phone number" required>
             <input type="date" id="date_of_birth" name="date_of_birth" required>
-
-            <label for="gender">Gender</label>
             <select id="gender" name="gender" required>
-                <option value="">Select...</option>
+                <option value="">Select your gender</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
             </select>
-
-            <input type="submit" value="Register">
-            <a href="login.php">Already have an account? Login here</a>
+            <input type="submit" value="Register" class="full-width">
+            <a href="login.php" class="full-width">Already have an account? Login here</a>
         </form>
     </div>
 </body>

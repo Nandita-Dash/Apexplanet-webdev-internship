@@ -6,6 +6,7 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
+// Database connection
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -17,8 +18,49 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$sql_all_users = "SELECT username, email, phone_number, date_of_birth, gender FROM users";
-$result_all_users = $conn->query($sql_all_users);
+// Get logged-in user's username from the session
+$logged_in_user = $_SESSION['username'];
+
+// Query to fetch the logged-in user's role from the database
+$sql_role = "SELECT role FROM users WHERE username = ?";
+$stmt = $conn->prepare($sql_role);
+$stmt->bind_param("s", $logged_in_user);
+$stmt->execute();
+$stmt->bind_result($logged_in_role);
+$stmt->fetch();
+$stmt->close();
+
+// Initialize result variables
+$result_admins = null;
+$result_users = null;
+
+// Separate queries for Admins and regular users
+$sql_admins = "SELECT username, email, phone_number, date_of_birth, gender FROM users WHERE role = 'Admin'";
+$sql_users = "SELECT username, email, phone_number, date_of_birth, gender FROM users WHERE role = 'User'";
+
+// Execute query for Admins
+if ($result_admins = $conn->query($sql_admins)) {
+    // Check if query failed
+    if ($result_admins === false) {
+        echo "Error executing query: " . $conn->error;
+        exit();
+    }
+} else {
+    echo "Error preparing query: " . $conn->error;
+    exit();
+}
+
+// Execute query for regular users
+if ($result_users = $conn->query($sql_users)) {
+    // Check if query failed
+    if ($result_users === false) {
+        echo "Error executing query: " . $conn->error;
+        exit();
+    }
+} else {
+    echo "Error preparing query: " . $conn->error;
+    exit();
+}
 
 $conn->close();
 ?>
@@ -41,8 +83,8 @@ $conn->close();
             margin: 0;
         }
         .container {
-            width: 80%;
-            max-width: 1000px; /* Increased width for more space */
+            width: 90%; 
+            max-width: 1200px;
             padding: 40px;
             border-radius: 20px;
             background: rgba(255, 255, 255, 0.85);
@@ -63,7 +105,7 @@ $conn->close();
         }
         .btn-back {
             padding: 8px 16px;
-            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            background-color: #ff758c;
             color: white;
             text-decoration: none;
             border-radius: 8px;
@@ -71,18 +113,21 @@ $conn->close();
             text-align: center;
         }
         .btn-back:hover {
-            background: linear-gradient(135deg, #ff7eb3, #ff758c);
+            background-color: #ff7eb3;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
         }
+        colgroup col {
+            width: 14%; /* Adjusted to balance columns */
+        }
         th, td {
-            padding: 12px; /* Increased padding for more space */
+            padding: 12px;
             text-align: left;
             border: 1px solid #ddd;
-            word-break: break-word; /* Ensure long words break properly */
+            word-break: break-word;
         }
         th {
             background-color: #f5f5f5;
@@ -91,27 +136,34 @@ $conn->close();
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        .action-btns {
+            display: flex;
+            gap: 4px; /* Space between buttons */
+            justify-content: center;
+        }
         .action-btns a {
             display: inline-block;
-            padding: 6px 12px; /* Increased padding for action buttons */
-            margin: 0 4px;
-            color: #ffffff;
+            padding: 8px 16px; /* Increased padding for better button visibility */
+            background-color: #ff758c;
+            color: white;
             text-decoration: none;
-            border-radius: 3px;
+            border-radius: 8px;
             font-size: 14px;
             text-align: center;
+            transition: background 0.3s ease, transform 0.2s ease;
         }
-        .edit {
-            background: linear-gradient(135deg, #333, #555);
+        .action-btns a:hover {
+            background-color: #ff7eb3;
+            transform: scale(1.05);
         }
-        .edit:hover {
-            background: linear-gradient(135deg, #555, #333);
+        td.action-btns {
+            text-align: center;
         }
-        .delete {
-            background: linear-gradient(135deg, #d9534f, #c9302c);
-        }
-        .delete:hover {
-            background: linear-gradient(135deg, #c9302c, #d9534f);
+        h2 {
+            text-align: left;
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -121,7 +173,18 @@ $conn->close();
             <h1>Manage Users</h1>
             <a href="dashboard.php" class="btn-back">Back to Dashboard</a>
         </header>
+
+        <!-- Admin Users Table -->
+        <h2>Admin Users</h2>
         <table>
+            <colgroup>
+                <col>
+                <col style="width: 30%;"> <!-- Wider column for email -->
+                <col>
+                <col>
+                <col>
+                <col style="width: 20%;"> <!-- Adjusted width for Actions column -->
+            </colgroup>
             <tr>
                 <th>Username</th>
                 <th>Email</th>
@@ -131,8 +194,8 @@ $conn->close();
                 <th>Actions</th>
             </tr>
             <?php
-            if ($result_all_users->num_rows > 0) {
-                while ($row = $result_all_users->fetch_assoc()) {
+            if ($result_admins && $result_admins->num_rows > 0) {
+                while ($row = $result_admins->fetch_assoc()) {
                     echo "<tr>";
                     echo "<td>" . htmlspecialchars($row['username']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['email']) . "</td>";
@@ -140,13 +203,57 @@ $conn->close();
                     echo "<td>" . htmlspecialchars($row['date_of_birth']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['gender']) . "</td>";
                     echo "<td class='action-btns'>";
-                    echo "<a href='update_user.php?username=" . urlencode($row['username']) . "' class='edit'>Edit</a>";
-                    echo "<a href='delete_user.php?username=" . urlencode($row['username']) . "' class='delete'>Delete</a>";
+                    if ($logged_in_role === 'Admin') {
+                        echo "<a href='update_user.php?username=" . urlencode($row['username']) . "'>Edit</a>";
+                        echo "<a href='delete_user.php?username=" . urlencode($row['username']) . "'>Delete</a>";
+                    }
                     echo "</td>";
                     echo "</tr>";
                 }
             } else {
-                echo "<tr><td colspan='6'>No users found.</td></tr>";
+                echo "<tr><td colspan='6'>No Admins found.</td></tr>";
+            }
+            ?>
+        </table>
+
+        <!-- Regular Users Table -->
+        <h2>Regular Users</h2>
+        <table>
+            <colgroup>
+                <col>
+                <col style="width: 30%;"> <!-- Wider column for email -->
+                <col>
+                <col>
+                <col>
+                <col style="width: 20%;"> <!-- Adjusted width for Actions column -->
+            </colgroup>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Date of Birth</th>
+                <th>Gender</th>
+                <th>Actions</th>
+            </tr>
+            <?php
+            if ($result_users && $result_users->num_rows > 0) {
+                while ($row = $result_users->fetch_assoc()) {
+                    echo "<tr>";
+                    echo "<td>" . htmlspecialchars($row['username']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['email']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['phone_number']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['date_of_birth']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['gender']) . "</td>";
+                    echo "<td class='action-btns'>";
+                    if ($logged_in_role === 'Admin' || $row['username'] === $logged_in_user) {
+                        echo "<a href='update_user.php?username=" . urlencode($row['username']) . "'>Edit</a>";
+                        echo "<a href='delete_user.php?username=" . urlencode($row['username']) . "'>Delete</a>";
+                    }
+                    echo "</td>";
+                    echo "</tr>";
+                }
+            } else {
+                echo "<tr><td colspan='6'>No Regular Users found.</td></tr>";
             }
             ?>
         </table>

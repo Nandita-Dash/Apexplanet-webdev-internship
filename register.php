@@ -10,7 +10,6 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Initialize $message to prevent warnings
 $message = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -20,8 +19,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $phone_number = trim($_POST['phone_number']);
     $date_of_birth = trim($_POST['date_of_birth']);
     $gender = trim($_POST['gender']);
+    $role = trim($_POST['role']);
 
-    if (empty($username) || empty($email) || empty($password) || empty($phone_number) || empty($date_of_birth) || empty($gender)) {
+    if (empty($username) || empty($email) || empty($password) || empty($phone_number) || empty($date_of_birth) || empty($gender) || empty($role)) {
         $message = "<p>Please fill in all fields.</p>";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "<p>Invalid email format.</p>";
@@ -40,12 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $message = "<p>This email or username is already registered. Please use another one.</p>";
         } else {
             $stmt_check->close();
-
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-            $sql = "INSERT INTO users (username, email, password, phone_number, date_of_birth, gender) VALUES (?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO users (username, email, password, phone_number, date_of_birth, gender, role) VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssssss", $username, $email, $hashed_password, $phone_number, $date_of_birth, $gender);
+            $stmt->bind_param("sssssss", $username, $email, $hashed_password, $phone_number, $date_of_birth, $gender, $role);
 
             if ($stmt->execute()) {
                 $message = "<p>Registration successful! <a href='login.php'>Go to Login</a></p>";
@@ -80,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         .container {
             width: 100%;
-            max-width: 600px;
+            max-width: 550px;
             padding: 40px;
             border-radius: 20px;
             background: rgba(255, 255, 255, 0.85);
@@ -88,8 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             text-align: center;
         }
         h2 {
-            font-size: 32px;
-            margin-bottom: 30px;
+            font-size: 30px;
+            margin-bottom: 25px;
             color: #333;
             font-weight: 600;
         }
@@ -100,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="date"], select {
             padding: 14px;
-            font-size: 16px;
+            font-size: 15px;
             border: 2px solid transparent;
             border-radius: 8px;
             background-color: #f0f0f0;
@@ -120,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: bold;
             transition: background 0.3s ease;
         }
@@ -128,9 +126,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             background: linear-gradient(135deg, #ff7eb3, #ff758c);
         }
         a {
-            margin-top: 20px;
+            margin-top: 15px;
             color: #ff7eb3;
-            font-size: 16px;
+            font-size: 15px;
             text-decoration: none;
         }
         a:hover {
@@ -139,9 +137,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .message {
             margin-bottom: 20px;
             color: red;
-            font-size: 14px;
+            font-size: 13px;
             grid-column: 1 / span 2;
             text-align: center;
+        }
+        select.full-width {
+            grid-column: 1 / span 2;
         }
     </style>
     <script>
@@ -152,9 +153,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             var phone_number = document.getElementById('phone_number').value.trim();
             var date_of_birth = document.getElementById('date_of_birth').value.trim();
             var gender = document.getElementById('gender').value.trim();
+            var role = document.getElementById('role').value.trim();
             var message = '';
 
-            if (username === '' || email === '' || password === '' || phone_number === '' || date_of_birth === '' || gender === '') {
+            if (username === '' || email === '' || password === '' || phone_number === '' || date_of_birth === '' || gender === '' || role === '') {
                 message = 'Please fill in all fields.';
             } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 message = 'Invalid email format.';
@@ -191,6 +193,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
+            </select>
+            <select id="role" name="role" required class="full-width">
+                <option value="">Select your role</option>
+                <option value="Admin">Admin</option>
+                <option value="User">User</option>
             </select>
             <input type="submit" value="Register" class="full-width">
             <a href="login.php" class="full-width">Already have an account? Login here</a>

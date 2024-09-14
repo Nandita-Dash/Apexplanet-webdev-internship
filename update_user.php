@@ -17,54 +17,73 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$message = "";  // Initialize message
-$user = null;   // Initialize user
-
 $loggedInUsername = $_SESSION['username'];
 
-if (isset($_GET['username'])) {
-    $username_to_edit = $_GET['username'];
+// Initialize the message variable to avoid undefined warnings
+$message = "";
 
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $email = trim($_POST['email']);
-        $phone_number = trim($_POST['phone_number']);
-        $date_of_birth = $_POST['date_of_birth'];
-        $gender = $_POST['gender'];
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $email = trim($_POST['email']);
+    $phone_number = trim($_POST['phone_number']);
+    $date_of_birth = $_POST['date_of_birth'];
+    $gender = $_POST['gender'];
 
-        if (empty($email) || empty($phone_number) || empty($date_of_birth) || empty($gender)) {
-            $message = "<p>Please fill in all fields.</p>";
+    // Handle file upload
+    $profilePicture = null; // Default to null if no file is uploaded
+
+    if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == UPLOAD_ERR_OK) {
+        $uploadDir = __DIR__ . '/uploads/'; // Directory where files should be uploaded
+        $uploadFile = $uploadDir . basename($_FILES['profile_picture']['name']);
+
+        // Ensure the directory exists
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        // Move the uploaded file to the desired directory
+        if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $uploadFile)) {
+            $profilePicture = basename($_FILES['profile_picture']['name']);
         } else {
-            $sql_update = "UPDATE users SET email=?, phone_number=?, date_of_birth=?, gender=? WHERE username=?";
-            $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("sssss", $email, $phone_number, $date_of_birth, $gender, $username_to_edit);
-
-            if ($stmt_update->execute()) {
-                $message = "<p>Update successful!</p>";
-            } else {
-                $message = "<p>Error: " . $stmt_update->error . "</p>";
-            }
-
-            $stmt_update->close();
+            $message = "<p>Failed to upload the file.</p>";
         }
     }
 
-    $sql_user = "SELECT username, email, phone_number, date_of_birth, gender FROM users WHERE username=?";
-    $stmt_user = $conn->prepare($sql_user);
-    $stmt_user->bind_param("s", $username_to_edit);
-    $stmt_user->execute();
-    $result_user = $stmt_user->get_result();
-
-    if ($result_user->num_rows > 0) {
-        $user = $result_user->fetch_assoc();
+    if (empty($email) || empty($phone_number) || empty($date_of_birth) || empty($gender)) {
+        $message = "<p>Please fill in all fields.</p>";
     } else {
-        $message = "<p>Error fetching user information.</p>";
-    }
+        // Update user information in the database
+        $sql_update = "UPDATE users SET email=?, phone_number=?, date_of_birth=?, gender=?, profile_picture=? WHERE username=?";
+        
+        if ($stmt = $conn->prepare($sql_update)) {
+            $stmt->bind_param("ssssss", $email, $phone_number, $date_of_birth, $gender, $profilePicture, $loggedInUsername);
+            
+            if ($stmt->execute()) {
+                $message = "<p>Update successful!</p>";
+            } else {
+                $message = "<p>Error: " . $conn->error . "</p>";
+            }
 
-    $stmt_user->close();
-} else {
-    $message = "<p>No user specified for update.</p>";
+            $stmt->close();
+        } else {
+            $message = "<p>Failed to prepare SQL statement.</p>";
+        }
+    }
 }
 
+// Fetch user data
+$sql_user = "SELECT username, email, phone_number, date_of_birth, gender, profile_picture FROM users WHERE username=?";
+$stmt_user = $conn->prepare($sql_user);
+$stmt_user->bind_param("s", $loggedInUsername);
+$stmt_user->execute();
+$result_user = $stmt_user->get_result();
+
+if ($result_user->num_rows > 0) {
+    $user = $result_user->fetch_assoc();
+} else {
+    echo "Error fetching user information.";
+}
+
+$stmt_user->close();
 $conn->close();
 ?>
 
@@ -93,19 +112,19 @@ $conn->close();
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             text-align: center;
-            position: relative; /* Allows positioning of the button within the container */
+            position: relative;
         }
         .container .btn-back {
             position: absolute;
             top: 10px;
             right: 10px;
-            padding: 6px 12px; /* Reduced padding */
+            padding: 6px 12px;
             background: linear-gradient(135deg, #ff758c, #ff7eb3);
             color: white;
             text-decoration: none;
             border-radius: 6px;
             text-align: center;
-            font-size: 14px; /* Reduced font size */
+            font-size: 14px;
         }
         .container .btn-back:hover {
             background: linear-gradient(135deg, #ff7eb3, #ff758c);
@@ -122,16 +141,16 @@ $conn->close();
             gap: 20px;
             align-items: center;
             margin-top: 20px;
-            text-align: left; /* Aligns labels to the left */
+            text-align: left;
         }
         label {
             margin-bottom: 5px;
             font-size: 16px;
             color: #555;
             text-align: left;
-            display: block; /* Ensures the label occupies the full width */
+            display: block;
         }
-        input[type="text"], input[type="email"], input[type="tel"], input[type="date"], select {
+        input[type="text"], input[type="email"], input[type="tel"], input[type="date"], select, input[type="file"] {
             padding: 12px;
             font-size: 16px;
             border: 1px solid #ddd;
@@ -140,7 +159,7 @@ $conn->close();
             box-sizing: border-box;
         }
         input[type="submit"] {
-            grid-column: span 2; /* Makes the submit button span across both columns */
+            grid-column: span 2;
             padding: 12px;
             background: linear-gradient(135deg, #ff758c, #ff7eb3);
             color: white;
@@ -158,31 +177,6 @@ $conn->close();
             text-align: center;
         }
     </style>
-    <script>
-        function validateForm(event) {
-            var email = document.getElementById('email').value.trim();
-            var phone_number = document.getElementById('phone_number').value.trim();
-            var date_of_birth = document.getElementById('date_of_birth').value.trim();
-            var gender = document.getElementById('gender').value.trim();
-            var message = '';
-
-            if (email === '' || phone_number === '' || date_of_birth === '' || gender === '') {
-                message = 'Please fill in all fields.';
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                message = 'Invalid email format.';
-            } else if (!/^\d{10}$/.test(phone_number)) {
-                message = 'Phone number must be 10 digits.';
-            }
-
-            if (message) {
-                document.getElementById('form-message').textContent = message;
-                event.preventDefault();
-                return false;
-            }
-
-            return true;
-        }
-    </script>
 </head>
 <body>
     <div class="container">
@@ -191,7 +185,7 @@ $conn->close();
         <div id="form-message" class="message">
             <?php echo $message; ?>
         </div>
-        <form action="update_user.php?username=<?php echo htmlspecialchars($username_to_edit); ?>" method="post" onsubmit="return validateForm(event)">
+        <form action="update_user.php" method="post" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" value="<?php echo isset($user['email']) ? htmlspecialchars($user['email']) : ''; ?>" required>
@@ -210,10 +204,16 @@ $conn->close();
             <div class="form-group">
                 <label for="gender">Gender</label>
                 <select id="gender" name="gender" required>
-                    <option value="Male" <?php echo (isset($user['gender']) && $user['gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
-                    <option value="Female" <?php echo (isset($user['gender']) && $user['gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
-                    <option value="Other" <?php echo (isset($user['gender']) && $user['gender'] == 'Other') ? 'selected' : ''; ?>>Other</option>
+                    <option value="">Select Gender</option>
+                    <option value="male" <?php echo (isset($user['gender']) && $user['gender'] == 'male') ? 'selected' : ''; ?>>Male</option>
+                    <option value="female" <?php echo (isset($user['gender']) && $user['gender'] == 'female') ? 'selected' : ''; ?>>Female</option>
+                    <option value="other" <?php echo (isset($user['gender']) && $user['gender'] == 'other') ? 'selected' : ''; ?>>Other</option>
                 </select>
+            </div>
+
+            <div class="form-group">
+                <label for="profile_picture">Profile Picture</label>
+                <input type="file" id="profile_picture" name="profile_picture">
             </div>
 
             <input type="submit" value="Update">

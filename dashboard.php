@@ -19,7 +19,7 @@ if ($conn->connect_error) {
 
 $loggedInUsername = $_SESSION['username'];
 
-$sql_user = "SELECT username, email, phone_number, date_of_birth, gender FROM users WHERE username=?";
+$sql_user = "SELECT username, email, phone_number, date_of_birth, gender, profile_picture FROM users WHERE username=?";
 $stmt_user = $conn->prepare($sql_user);
 $stmt_user->bind_param("s", $loggedInUsername);
 $stmt_user->execute();
@@ -54,64 +54,86 @@ $conn->close();
         }
         .container {
             width: 100%;
-            max-width: 800px; /* Increased width */
-            padding: 60px; /* Increased padding */
+            max-width: 900px;
+            padding: 40px;
             border-radius: 20px;
             background: rgba(255, 255, 255, 0.85);
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            text-align: center;
             position: relative;
         }
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px; /* Increased margin for spacing */
+            margin-bottom: 30px;
         }
         h1 {
-            font-size: 36px; /* Increased font size */
+            font-size: 36px;
             margin: 0;
             color: #333;
             font-weight: 600;
         }
         .btn-manage-users, .btn-logout {
-            padding: 10px 20px; /* Increased padding */
+            padding: 10px 20px;
             background: linear-gradient(135deg, #ff758c, #ff7eb3);
             color: white;
             text-decoration: none;
             border-radius: 8px;
-            font-size: 16px; /* Increased font size */
+            font-size: 16px;
             text-align: center;
         }
-        .btn-manage-users {
-            margin-right: 20px;
-        }
-        .btn-manage-users:hover {
+        .btn-manage-users:hover, .btn-logout:hover {
             background: linear-gradient(135deg, #ff7eb3, #ff758c);
         }
-        .btn-logout {
-            margin-left: auto;
+        .profile-section {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
         }
-        .btn-logout:hover {
-            background: linear-gradient(135deg, #ff7eb3, #ff758c);
+        .profile-info, .cat-fact {
+            flex: 1;
+            padding: 25px;
+            border-radius: 12px;
+            background-color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
         }
-        .profile-info {
-            margin-bottom: 30px; /* Increased margin */
-            padding: 25px; /* Increased padding */
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #ffffff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: left;
+        .profile-info:hover, .cat-fact:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .profile-info img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            object-fit: cover;
         }
         .profile-info h2 {
             margin: 0;
-            font-size: 28px; /* Increased font size */
+            font-size: 28px;
             color: #333;
         }
         .profile-info p {
-            margin: 12px 0; /* Increased margin */
+            margin: 12px 0;
             color: #666;
+        }
+        .cat-fact h3 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .cat-fact p {
+            font-size: 18px;
+            line-height: 1.6;
+            padding: 15px;
+            background: rgba(255, 183, 196, 0.2);
+            border-radius: 10px;
+            color: #666;
+            border: 1px solid rgba(255, 183, 196, 0.5);
+        }
+        .cat-fact p:before {
+            content: "🐱 ";
         }
     </style>
 </head>
@@ -124,13 +146,35 @@ $conn->close();
                 <a href="logout.php" class="btn-logout">Logout</a>
             </div>
         </header>
-        <div class="profile-info">
-            <h2>Welcome, <?php echo htmlspecialchars($user['username']); ?>!</h2>
-            <p>Email: <?php echo htmlspecialchars($user['email']); ?></p>
-            <p>Phone Number: <?php echo htmlspecialchars($user['phone_number']); ?></p>
-            <p>Date of Birth: <?php echo htmlspecialchars($user['date_of_birth']); ?></p>
-            <p>Gender: <?php echo htmlspecialchars($user['gender']); ?></p>
+        <div class="profile-section">
+            <div class="profile-info">
+                <?php
+                $profilePicturePath = !empty($user['profile_picture']) ? 'uploads/' . htmlspecialchars($user['profile_picture']) : 'images/ud.png';
+                ?>
+                <img src="<?php echo $profilePicturePath; ?>" alt="Profile Picture">
+                <h2>Welcome, <?php echo htmlspecialchars($user['username']); ?>!</h2>
+                <p>Email: <?php echo htmlspecialchars($user['email']); ?></p>
+                <p>Phone Number: <?php echo htmlspecialchars($user['phone_number']); ?></p>
+                <p>Date of Birth: <?php echo htmlspecialchars($user['date_of_birth']); ?></p>
+                <p>Gender: <?php echo htmlspecialchars($user['gender']); ?></p>
+            </div>
+            <div class="cat-fact">
+                <h3>Cat Fact of the Day</h3>
+                <p id="catFact">Loading cat fact...</p>
+            </div>
         </div>
     </div>
+
+    <script>
+        fetch('https://catfact.ninja/fact')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('catFact').innerText = data.fact;
+            })
+            .catch(error => {
+                document.getElementById('catFact').innerText = "Unable to fetch cat fact.";
+                console.error('Error fetching cat fact:', error);
+            });
+    </script>
 </body>
 </html>
